@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block app_content %}
+<select id="search_bar" class="js-states form-control" style="width: 100%" >
+</select>
+ <div class="col-sm-4 frame" id="chat">
+    <div class="panel panel-primary">
+        <div class="panel-heading" id="accordion">
+            <span class="glyphicon glyphicon-comment"></span> Активный интеллектуальный помощник
+            <div class="btn-group pull-right">
+                <a type="button" class="btn btn-default btn-xs" id="collapse_button">
+                    <span id="collapse_span" class="glyphicon glyphicon-chevron-down"></span>
+                </a>
+            </div>
+        </div>
+        <div  class="panel-collapse collapse in" id="collapseChat">
+            <div class="panel-body">
+                <ul class="message_list"></ul>
+            </div>
+            <div class="panel-footer">
+                <div>
+                    <div style="background:whitesmoke !important">
+                        <input class="mytext" placeholder="Type a message" id="chat_user_input"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<h1>Для дальнейшей работы нужно загрузить файл онтологии</h1>
+<form method=post enctype=multipart/form-data>
+   <span style="display: inline-block">
+   <label for="fileLoadOnt" class="btn btn-default" id="ontLoadButton">
+   Загрузить онтологию
+   </label></span>
+   <span style="display: inline-block"><input type=file name=file accept=".ont, .json" onchange="javascript:loadTree(this)" id ="fileLoadOnt"
+      style="opacity: 0.0"></span>
+   <span style="display: inline-block">
+      <h3  id="ont_filename"> </h3>
+   </span>
+</form>
+<br>
+<form method=post enctype=multipart/form-data>
+   <span style="display: inline-block">
+   <label for="fileLoadData" class="btn btn-default" id="ontLoadDataButton">
+   Загрузить данные
+   </label></span>
+   <span style="display: inline-block"><input type=file name=file onchange="javascript:loadData(this)" id = 'fileLoadData' style="opacity: 0.0"></span>
+   <span style="display: inline-block">
+      <h3 id="data_filename"> </h3>
+   </span>
+</form>
+<br>
+<div>
+   <button type="button" class="btn btn-danger"  id = "bigRedButton" style="visibility: hidden; display: inline-block" onclick="javascript:RunMethod()">Запустить алгоритм</button>
+   <button type="button" class="btn btn-secondary"  id = "downloadResButton" style="visibility: hidden; display: inline-block" onclick="javascript:downloadRes()">Скачать результат</button>
+   <button type="button" class="btn btn-info" id = "openModalButton" style="visibility: hidden; display: inline-block" data-toggle="modal" data-target="#PieChartModal">
+   Посмотреть результаты
+   </button>
+</div>
+<div class="modal fade" id="PieChartModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h3 class="modal-title" id="Диаграмма для результатов кластеризации">Результаты кластеризации</h3>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+         </div>
+         <div class="modal-body">
+            <div id="pieChart" style="width:700px;height:450px;"></div>
+         </div>
+      </div>
+   </div>
+</div>
+<br>
+<div id = "chosenNodeContainer" style="visibility: hidden">
+   <span style="display: inline-block">
+      <h3>Выбранный элемент:</h3>
+   </span>
+   <span style="display: inline-block">
+      <h5 id = "chosenNodeString"></h5>
+   </span>
+</div>
+<div>
+   <button type="button" class="btn btn-primary btn-lg tree_opt" style="visibility: hidden; display: inline-block" onclick="javascript:ExpandTree()">Раскрыть</button>
+   <button type="button" class="btn btn-secondary btn-lg tree_opt" style="visibility: hidden; display: inline-block" onclick="javascript:CollapseTree()">Свернуть</button>
+</div>
+<div id="tree"></div>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenu1" id="context-menu" style="max-width: 200px">
+   <p id="annotationText" class="font-weight-light" style="word-wrap: break-word; white-space: normal;margin: 10px">Light weight text.</p>
+</ul>
+{% block scripts %}
+{{super()}}
+<script src="{{ url_for('static', filename='bootstrap-treeview/js/bootstrap-treeview35.js') }}" type="text/javascript"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='js/bot.js') }}"></script>
+ <link href="{{ url_for('static', filename='css/bot_page.css') }}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+<script>
+   function RunMethod() {
+       $("#bigRedButton").html('<img src="{{ url_for('static', filename='loading.gif') }}">');
+       node = $('#tree').treeview('getSelected', 0)[0];
+       $.post('/run_method_' + node.initId, {})
+           .done(function (response) {
+               $('#downloadResButton').text('Загрузить результаты');
+               $('#downloadResButton').css('visibility', 'visible');
+               $("#bigRedButton").text("Запустить метод");
+               $("h1").text("Метод завершил работу");
+               if (response.pie_chart) {
+                   pie_chart_data = response.pie_chart;
+                   MakeDonutDiagram(pie_chart_data);
+                   $('#openModalButton').css('visibility', 'visible');
+                   $('#PieChartModal').modal('show');
+               } else {
+                   $('#openModalButton').css('visibility', 'hidden');
+               }
+           }).fail(function () {
+           $('#downloadResButton').text('Загрузить предыдущие результаты');
+           $("h1").text("Произошла ошибка при запуске метода");
+           $("#bigRedButton").text("Запустить метод");
+       })
+   }
+</script>
+{% endblock %}
+{% endblock %}

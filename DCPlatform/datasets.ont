@@ -1,0 +1,86 @@
+{
+    "last_id": "5",
+    "namespaces": {
+        "default": "http://knova.ru/user/1586725064485",
+        "ontolis-avis": "http://knova.ru/ontolis-avis",
+        "owl": "http://www.w3.org/2002/07/owl",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema",
+        "xsd": "http://www.w3.org/2001/XMLSchema"
+    },
+    "nodes": [
+        {
+            "attributes": {
+            },
+            "id": "1",
+            "name": "datasets",
+            "namespace": "http://knova.ru/user/1586725064485",
+            "position_x": 408,
+            "position_y": 200
+        },
+        {
+            "attributes": {
+                "<target>": "target",
+                "<used_cols>": [
+                    "age",
+                    "sex",
+                    "cp",
+                    "trestbps",
+                    "chol",
+                    "fbs",
+                    "restecg",
+                    "thalach",
+                    "exang",
+                    "oldpeak",
+                    "slope",
+                    "ca",
+                    "thal"
+                ]
+            },
+            "id": "2",
+            "name": "heart.csv",
+            "namespace": "http://knova.ru/user/1586725064485",
+            "position_x": 200,
+            "position_y": 342
+        },
+        {
+            "attributes": {
+                "<used_cols>": [
+                    "site",
+                    "month",
+                    "item_code",
+                    "units",
+                    "count",
+                    "year",
+                    "machine_name"
+                ]
+            },
+            "id": "4",
+            "name": "rjd.csv",
+            "namespace": "http://knova.ru/user/1586725064485",
+            "position_x": 423,
+            "position_y": 367
+        }
+    ],
+    "relations": [
+        {
+            "attributes": {
+            },
+            "destination_node_id": "1",
+            "id": "3",
+            "name": "a_part_of",
+            "namespace": "http://knova.ru/user/1586725064485",
+            "source_node_id": "2"
+        },
+        {
+            "attributes": {
+            },
+            "destination_node_id": "1",
+            "id": "5",
+            "name": "a_part_of",
+            "namespace": "http://knova.ru/user/1586725064485",
+            "source_node_id": "4"
+        }
+    ],
+    "visualize_ont_path": ""
+}
