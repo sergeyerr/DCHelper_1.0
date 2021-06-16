@@ -73,6 +73,7 @@ def load_data():
         os.remove(filename)
     file.save(filename)
     files[current_user.username] = filename
+    IA.data = pd.read_csv(files[current_user.username])
     return make_response(jsonify({}), 200)
 
 

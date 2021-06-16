@@ -60,6 +60,9 @@ function insertChat(who, text, time) {
             if (parsed[elem][0] === 'text') {
                 control += '<p>' + parsed[elem][1] + '</p>';
             }
+            else if (parsed[elem][0] === 'method_link') {
+                control += '<a href="'+ 'tip.html' + '">' + parsed[elem][1] + '</a>';
+            }
         }
         control +=
             '<p><small>' + date + '</small></p>' +

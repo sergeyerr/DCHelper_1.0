@@ -1,6 +1,8 @@
 import json
 from collections import deque
 
+from typing import List
+
 
 class Node(object):
     def __init__(self, node_id, name, pos_x, pos_y, attributes={}):
@@ -115,7 +117,7 @@ class Ontology(object):
             source.output_relations[rel['id']] = self.__relations__[rel['id']]
             dest.input_relations[rel['id']] = self.__relations__[rel['id']]
 
-    def select_nodes(self, expr):
+    def select_nodes(self, expr) -> List[Node]:
         answer = []
         for node in self.__nodes__.values():
             if eval(expr):
