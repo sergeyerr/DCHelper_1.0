@@ -32,6 +32,14 @@ function formatAMPM(date) {
     return hours + ':' + minutes + ' ' + ampm;
 }
 
+function openTreeByID(data_id) {
+    CollapseTree();
+    $('#tree').treeview('search', [ data_id.toString(), {
+        revealResults: true,  // reveal matching nodes
+    }])
+}
+
+
 //-- No use time. It is a javaScript effect.
 function insertChat(who, text, time) {
     if (time === undefined) {
@@ -61,7 +69,8 @@ function insertChat(who, text, time) {
                 control += '<p>' + parsed[elem][1] + '</p>';
             }
             else if (parsed[elem][0] === 'method_link') {
-                control += '<a href="'+ 'tip.html' + '">' + parsed[elem][1] + '</a>';
+                console.log(parsed[elem][2])
+                control += '<a href="'+ 'javascript:void(0)' + '" onclick=' + '"openTreeByID(' + parsed[elem][2] + ')"' + '>' + parsed[elem][1] + '</a>';
             }
         }
         control +=

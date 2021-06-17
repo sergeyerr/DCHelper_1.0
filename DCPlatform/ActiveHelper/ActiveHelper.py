@@ -232,9 +232,10 @@ class ActiveHelper(object):
             res.append(['text', 'Эти методы должны хорошо работать на ваших данных:\n'])
             for method in methods:
                 method_id = find_method_id(method)
-                # alarm, тут можно схитрить, и не делать ссылки не найденные методы
                 if method_id is not None:
                     res.append(['method_link', method, method_id])
+                else:
+                    res.append(['text', method])
             #res = f'Эти методы должны хорошо работать на ваших данных:\n {methods_str}'
 
             if len(ont_methods) > 0:
