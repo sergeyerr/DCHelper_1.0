@@ -15,6 +15,7 @@
    </span>
 </form>
 <br>
+
 <form method=post enctype=multipart/form-data>
    <span style="display: inline-block">
    <label for="fileLoadData" class="btn btn-default" id="ontLoadDataButton">
@@ -25,6 +26,22 @@
       <h3 id="data_filename"> </h3>
    </span>
 </form>
+
+{% if prev_datasets %}
+<form>
+    <div class="form-group">
+      <label for="data_select"> История датасетов: </label>
+      <select class="form-control" id="data_select" style="width: 30%; display: inline-block">
+        {% for d in prev_datasets %}
+            <option value="{{ d[0] }}"> {{ d[1] }} </option>
+        {% endfor %}
+      </select>
+      <label for="data_select" class="btn btn-default" id="selectOldDataButton" style="display: inline-block" onclick="selectOldData(self)">
+          Использовать выбранный датасет
+      </label>
+    </div>
+</form>
+{% endif %}
 <br>
 <div>
    <button type="button" class="btn btn-danger"  id = "bigRedButton" style="visibility: hidden; display: inline-block" onclick="javascript:RunMethod()">Запустить алгоритм</button>

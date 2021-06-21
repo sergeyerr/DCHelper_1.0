@@ -40,3 +40,6 @@ sentence-transformers
 openml
 pymfe
 protobuf
+
+
+httpx

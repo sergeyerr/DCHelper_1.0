@@ -1,5 +1,6 @@
 from app import app
-from app.utilities import make_branch, find_lib, find_dataset, supervised, is_clustering
+from app.utilities import make_branch, find_lib, supervised, is_clustering
+from app import data_service_adapter
 from flask import render_template, request, flash, redirect, send_file, url_for
 from flask import jsonify, make_response
 from werkzeug.utils import secure_filename
@@ -11,6 +12,7 @@ from flask_login import login_required
 from flask_login import logout_user
 from werkzeug.urls import url_parse
 from app.NLPqueries import QueryProcessor
+
 import pandas as pd
 import os
 import json
@@ -40,6 +42,9 @@ def allowed_file(filename):
 @app.route('/index', methods=['GET'])
 @login_required
 def index():
+    prev_datasets = data_service_adapter.get_user_datasets(user_name=current_user.username)
+    if len(prev_datasets) > 0:
+        return render_template('index.html', prev_datasets=prev_datasets)
     return render_template('index.html')
 
 
@@ -58,22 +63,32 @@ def make_tree():
         res.append(make_branch(ont, node=root, input_edges_dfs=root.attributes['<descend_in_edges>']))
     return jsonify(res)
 
+@app.route('/select_old_data_<dataId>', methods=['POST'])
+@login_required
+def select_old_data(dataId :int):
+    IA.data = data_service_adapter.get_dataset_data(dataId)
+    files[current_user.username] = dataId
+    return make_response(jsonify({}), 200)
 
 @app.route('/load_data', methods=['POST'])
 @login_required
 def load_data():
     file = request.files['file']
     filename = secure_filename(file.filename)
-    filename = os.path.join(UPLOAD_FOLDER, current_user.username, filename)
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.mkdir(UPLOAD_FOLDER)
-    if not os.path.exists(os.path.join(UPLOAD_FOLDER, current_user.username)):
-        os.mkdir(os.path.join(UPLOAD_FOLDER, current_user.username))
-    if os.path.exists(filename):
-        os.remove(filename)
-    file.save(filename)
-    files[current_user.username] = filename
-    IA.data = pd.read_csv(files[current_user.username])
+   # filename = os.path.join(UPLOAD_FOLDER, current_user.username, filename)
+    # if not os.path.exists(UPLOAD_FOLDER):
+    #     os.mkdir(UPLOAD_FOLDER)
+    # if not os.path.exists(os.path.join(UPLOAD_FOLDER, current_user.username)):
+    #     os.mkdir(os.path.join(UPLOAD_FOLDER, current_user.username))
+    # if os.path.exists(filename):
+    #     os.remove(filename)
+    # #file.save(filename)
+    #files[current_user.username] = filename
+    data_id = data_service_adapter.upload_dataset(filename, file, user_name=current_user.username)
+    IA.data = data_service_adapter.get_dataset_data(data_id)
+    files[current_user.username] = data_id
+    #IA.data = pd.read_csv(files[current_user.username])
+
     return make_response(jsonify({}), 200)
 
 
@@ -82,13 +97,15 @@ def load_data():
 def run_by_ontId(methodId):
     ont = ontologies[current_user.username]
     node = ont.__nodes__[methodId]
-    dataset = find_dataset(files[current_user.username])
+    #dataset = find_dataset(files[current_user.username])
+    dataset = False
     try:
-        data = pd.read_csv(files[current_user.username])
+        data = data_service_adapter.get_dataset_data(files[current_user.username])
         res = data.copy()
 
         if supervised(ont, node):
             if dataset:
+                # починить бы, а то кринж. Уже же есть штука с поиском таргета у актива
                 target = data[dataset.attributes['<target>']]
             else:
                 target = data.target

@@ -119,6 +119,20 @@
      })
    }
 
+   function selectOldData(label) {
+        var e = document.getElementById("data_select");
+        var data_id = e.value;
+        fetch('select_old_data_' + data_id, {
+         method: 'POST',
+     }).then(response => {
+         $("#data_filename").text('Имя файла c данными: ' + e.options[e.selectedIndex].text);
+         dataLoaded = true;
+         if (algoChosen) {
+             $("#bigRedButton").css('visibility', 'visible');
+         }
+     })
+   }
+
    function downloadRes() {
          const a = document.createElement('a');
          a.download = '';
