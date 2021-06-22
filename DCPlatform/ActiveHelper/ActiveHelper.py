@@ -30,7 +30,7 @@ class ActiveHelper(object):
             pd.read_csv('ActiveHelper/target_list.csv')['target'].str.lower().values.reshape(-1))
         self.task_query = None
         self.keywords = {'Начать заново': (self.state_0, get_emb('начать заново')),
-                         'В начало диалога': (self.state_0, get_emb('в начало диалога'))
+                         'В начало диалога': (self.state_0, get_emb('в начало диалога')),
                          }
         #      'Назад' : ,
         #   'К выбору задачи' :,
@@ -264,7 +264,7 @@ class ActiveHelper(object):
         return res
 
     def end_state(self, query: str):
-        return [['text', 'Если хотите начать заново, напишите "заново". В следующих версиях можно будет вернутся к предыдущим шагам.']]
+        return [['text', 'Если хотите начать заново, напишите "Начать заново"']]
 
     def process_query(self, query: str) -> list:
         tmp_res = self.check_keywords(str.lower(query))

@@ -116,7 +116,15 @@ def run_by_ontId(methodId):
         method = name[str.find(name, lib) + len(lib) + 1:]
     else:
         method = name
-    if is_regression(ont, node):
+    if is_regression(ont, node) and is_classification(ont, node):
+        if 'class' in method.lower():
+            results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method,
+                                                                                              lib, target)
+        else:
+            results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method,
+                                                                                              lib, target)
+
+    elif is_regression(ont, node):
         results[current_user.username] = runner_service_adapter.run_regression_method(user_id, data_id, method, lib, target)
     elif is_classification(ont, node):
         results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method, lib, target)

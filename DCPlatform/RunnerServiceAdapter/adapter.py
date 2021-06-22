@@ -15,7 +15,7 @@ class RunnerServiceAdapter:
               ('target', target)
               ]
         try:
-            r = httpx.post(f"http://{self.address}/run_classification",params = params)
+            r = httpx.post(f"http://{self.address}/run_classification",params = params, timeout=60)
         except httpx.HTTPError as exc:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
