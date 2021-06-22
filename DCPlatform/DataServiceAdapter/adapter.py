@@ -67,7 +67,7 @@ class DataServiceAdapter:
         return r.json()['dataset_id'], r.json()['name']
 
 
-    def get_metafeatures_of_datasets(self,  datasets_ids : List[int]) -> pd.DataFrame:
+    def get_metafeatures_of_datasets(self,  dataset_ids : List[int]) -> pd.DataFrame:
         params = {'ids' : dataset_ids}
         try:
             r = httpx.get(f"http://{self.address}/get_metafeatures_of_datasets",params = params)
@@ -127,3 +127,14 @@ class DataServiceAdapter:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
         return pd.read_csv(StringIO(r.read().decode('utf-8')))
+        
+        
+    def get_user_id(self, username: str):
+        params = [('username', username)]
+        try:
+            r = httpx.get(f"http://{self.address}/get_user_id",params = params)
+            r.raise_for_status()
+        except httpx.HTTPError as exc:
+            print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
+            return None
+        return r.json()['user_id']

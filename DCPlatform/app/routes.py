@@ -1,6 +1,6 @@
 from app import app
-from app.utilities import make_branch, find_lib, supervised, is_clustering
-from app import data_service_adapter
+from app.utilities import *
+from app import data_service_adapter, runner_service_adapter
 from flask import render_template, request, flash, redirect, send_file, url_for
 from flask import jsonify, make_response
 from werkzeug.utils import secure_filename
@@ -18,7 +18,6 @@ import os
 import json
 from ActiveHelper import Helper
 
-IA = Helper()
 #alarm
 #IA.data = pd.read_csv('../crimes.csv')
 
@@ -27,10 +26,12 @@ UPLOAD_FOLDER = 'uploads'
 
 ALLOWED_EXTENSIONS = {'ont', 'json'}
 
-files = {}
+current_data_ids = {}
+current_targets = {}
 results = {}
 ontologies = {}
 query_processors = {}
+active_assistants = {}
 
 
 def allowed_file(filename):
@@ -66,8 +67,9 @@ def make_tree():
 @app.route('/select_old_data_<dataId>', methods=['POST'])
 @login_required
 def select_old_data(dataId :int):
-    IA.data = data_service_adapter.get_dataset_data(dataId)
-    files[current_user.username] = dataId
+    active_assistants[current_user.username].data = data_service_adapter.get_dataset_data(dataId)
+    active_assistants[current_user.username].data_id = dataId
+    current_data_ids[current_user.username] = dataId
     return make_response(jsonify({}), 200)
 
 @app.route('/load_data', methods=['POST'])
@@ -85,8 +87,10 @@ def load_data():
     # #file.save(filename)
     #files[current_user.username] = filename
     data_id = data_service_adapter.upload_dataset(filename, file, user_name=current_user.username)
-    IA.data = data_service_adapter.get_dataset_data(data_id)
-    files[current_user.username] = data_id
+    active_assistants[current_user.username].data = data_service_adapter.get_dataset_data(data_id)
+    active_assistants[current_user.username].data_id = data_id
+    current_data_ids[current_user.username] = data_id
+    del current_targets[current_user.username]
     #IA.data = pd.read_csv(files[current_user.username])
 
     return make_response(jsonify({}), 200)
@@ -97,63 +101,39 @@ def load_data():
 def run_by_ontId(methodId):
     ont = ontologies[current_user.username]
     node = ont.__nodes__[methodId]
-    #dataset = find_dataset(files[current_user.username])
-    dataset = False
-    try:
-        data = data_service_adapter.get_dataset_data(files[current_user.username])
-        res = data.copy()
-
-        if supervised(ont, node):
-            if dataset:
-                # починить бы, а то кринж. Уже же есть штука с поиском таргета у актива
-                target = data[dataset.attributes['<target>']]
-            else:
-                target = data.target
-                data.drop(['target'], axis=1, inplace=True)
-
-        if dataset:
-            data = data[dataset.attributes['<used_cols>']]
-        else:
-            data = data[data.dtypes[data.dtypes != "object"].index]
-        name = node.name
-    except Exception as e:
-        return make_response(jsonify({'exception': str(e)}), 404)
+    data_id = current_data_ids[current_user.username]
+    user_id = data_service_adapter.get_user_id(current_user.username)
+    if active_assistants[current_user.username].target_col:
+        target = active_assistants[current_user.username].target_col
+    else:
+        target = 'target'
     lib = find_lib(node)
     if not lib:
         return make_response(jsonify({'exception': 'this library is not supported'}), 404)
     lib = lib.name
+    name = node.name
     if str.find(name, lib) != -1:
         method = name[str.find(name, lib) + len(lib) + 1:]
     else:
         method = name
-    exec(f'from {lib} import {method}')
-    clf = eval(f'{method}()')
-    if supervised(ont, node):
-        clf.fit(data, target)
+    if is_regression(ont, node):
+        results[current_user.username] = runner_service_adapter.run_regression_method(user_id, data_id, method, lib, target)
+    elif is_classification(ont, node):
+        results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method, lib, target)
+    elif is_clustering(ont, node):
+        results[current_user.username] = runner_service_adapter.run_clusterting_method(user_id, data_id, method, lib)
     else:
-        clf.fit(data)
-    res['predicted'] = clf.predict(data)
-    res_dir = os.path.join(RES_FOLDER, current_user.username)
-    res_name = method + '.csv'
-    if not os.path.exists(RES_FOLDER):
-        os.mkdir(RES_FOLDER)
-    if not os.path.exists(res_dir):
-        os.mkdir(res_dir)
-    res.to_csv(os.path.join(res_dir, res_name), index=False, encoding='UTF-8')
-    uploads = os.path.join(os.path.dirname(os.getcwd()), 'DCHelper', res_dir, res_name)
-    results[current_user.username] = uploads
-
-    if is_clustering(ont, node):
-        pie_chart_parts = list(res['predicted'].value_counts())
-    else:
-        pie_chart_parts = False
-    return make_response(jsonify({'pie_chart': pie_chart_parts}), 200)
+        return make_response(jsonify({'exception': 'such task is not supported'}), 404)
+        #raise Exception('such task is not supported')
+    return make_response(jsonify({'pie_chart': False}), 200)
 
 
 @app.route('/get_res', methods=['GET', 'POST'])
 @login_required
 def download_results():
-    return send_file(results[current_user.username], as_attachment=True)
+    df = data_service_adapter.get_run_data(results[current_user.username])
+    df.to_csv('./app/res.csv', index=False)
+    return send_file('./res.csv', as_attachment=True)
 
 
 @app.route('/nlp_query', methods=['GET', 'POST'])
@@ -194,6 +174,8 @@ def logout():
 @app.route('/api/bot', methods=['POST'])
 @login_required
 def bot_answer():
-    list_of_p = IA.process_query(request.data.decode('utf-8'))
+    if current_user.username not in active_assistants:
+        active_assistants[current_user.username] = Helper()
+    list_of_p = active_assistants[current_user.username].process_query(request.data.decode('utf-8'))
     return json.dumps(list_of_p)
 

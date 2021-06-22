@@ -1,5 +1,6 @@
 from ont_mapping import dfs_edges
-from app import datasets_ont
+
+
 def SortedDict(prev):
     res = prev
     if 'nodes' in prev:
@@ -8,7 +9,9 @@ def SortedDict(prev):
             res['nodes'][i] = SortedDict(res['nodes'][i])
     return res
 
-def make_branch(ontology, root_query = '', input_edges_dfs = [], output_edges_dfs = [], pass_cycles=False, remove_copies=True, sorted=True, node = None, mark_methods = True):
+
+def make_branch(ontology, root_query='', input_edges_dfs=[], output_edges_dfs=[], pass_cycles=False, remove_copies=True,
+                sorted=True, node=None, mark_methods=True):
     if node is None:
         tmp = ontology.select_nodes(root_query)
         if len(tmp) == 0:
@@ -16,7 +19,7 @@ def make_branch(ontology, root_query = '', input_edges_dfs = [], output_edges_df
         node = tmp[0]
     edges = dfs_edges(node, input_edges_dfs, output_edges_dfs, pass_cycles)
     res = {'text': node.name, 'initId': node.id, 'nodes': [], 'annotation': node.attributes['<description>']
-                                                            if '<description>' in node.attributes else None}
+    if '<description>' in node.attributes else None}
     if mark_methods:
         res['isMethod'] = False
     nodes_dict = {node: res}
@@ -26,8 +29,9 @@ def make_branch(ontology, root_query = '', input_edges_dfs = [], output_edges_df
         if edge.name in output_edges_dfs:  # in case of opposite direction swap needed
             origin, dest = dest, origin
         if origin not in nodes_dict:
-            nodes_dict[origin] = {'text': origin.name, 'initId': origin.id, 'annotation': origin.attributes['<description>']
-                                                            if '<description>' in origin.attributes else None}
+            nodes_dict[origin] = {'text': origin.name, 'initId': origin.id,
+                                  'annotation': origin.attributes['<description>']
+                                  if '<description>' in origin.attributes else None}
             if mark_methods:
                 if (edge.name == 'use' or edge.name == 'a_part_of') and edge.name in input_edges_dfs:
                     nodes_dict[origin]['isMethod'] = True
@@ -53,6 +57,8 @@ def find_lib(node):
 
 
 import os
+
+
 def find_dataset(name):
     if not datasets_ont:
         return False
@@ -62,12 +68,30 @@ def find_dataset(name):
         return False
     return res[0]
 
-def supervised(ontology, node):
+
+def is_supervised(ontology, node):
     edges = dfs_edges(node, [], ['use', 'used_for', 'is_a'])
     for edge in edges:
         if 'Supervised' in edge.dest.name:
             return True
     return False
+
+
+def is_regression(ontology, node):
+    edges = dfs_edges(node, [], ['use', 'used_for', 'is_a'])
+    for edge in edges:
+        if 'continuous variable(Regression)' in edge.dest.name:
+            return True
+    return False
+
+
+def is_classification(ontology, node):
+    edges = dfs_edges(node, [], ['use', 'used_for', 'is_a'])
+    for edge in edges:
+        if 'discrete variable(classification)' in edge.dest.name:
+            return True
+    return False
+
 
 def is_clustering(ontology, node):
     edges = dfs_edges(node, [], ['use', 'used_for', 'is_a'])

@@ -50,21 +50,6 @@
    Посмотреть результаты
    </button>
 </div>
-<div class="modal fade" id="PieChartModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-   <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-         <div class="modal-header">
-            <h3 class="modal-title" id="Диаграмма для результатов кластеризации">Результаты кластеризации</h3>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-         </div>
-         <div class="modal-body">
-            <div id="pieChart" style="width:700px;height:450px;"></div>
-         </div>
-      </div>
-   </div>
-</div>
 <br>
 <div id = "chosenNodeContainer" style="visibility: hidden">
    <span style="display: inline-block">
@@ -109,7 +94,6 @@
 {% block scripts %}
 {{super()}}
 <script src="{{ url_for('static', filename='bootstrap-treeview/js/bootstrap-treeview35.js') }}" type="text/javascript"></script>
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="{{ url_for('static', filename='js/index.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/bot.js') }}"></script>
  <link href="{{ url_for('static', filename='css/bot_page.css') }}" rel="stylesheet">
@@ -125,14 +109,6 @@
                $('#downloadResButton').css('visibility', 'visible');
                $("#bigRedButton").text("Запустить метод");
                $("h1").text("Метод завершил работу");
-               if (response.pie_chart) {
-                   pie_chart_data = response.pie_chart;
-                   MakeDonutDiagram(pie_chart_data);
-                   $('#openModalButton').css('visibility', 'visible');
-                   $('#PieChartModal').modal('show');
-               } else {
-                   $('#openModalButton').css('visibility', 'hidden');
-               }
            }).fail(function () {
            $('#downloadResButton').text('Загрузить предыдущие результаты');
            $("h1").text("Произошла ошибка при запуске метода");

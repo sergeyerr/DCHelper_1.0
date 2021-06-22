@@ -82,13 +82,9 @@
    $(this).hide();
    });
 
-   $('#PieChartModal').on('show.bs.modal', function (event) {
-     MakeDonutDiagram(pie_chart_data);
-     });
 
    var algoChosen = false;
    var dataLoaded = false;
-   var pie_chart_data = 0;
    function ExpandTree() {
        let selected = $('#tree').treeview('getSelected')
        if (selected.length > 0) $('#tree').treeview('unselectNode',selected);
@@ -210,22 +206,3 @@
              $("#bigRedButton").css('visibility', 'visible');
          }
    };
-
-   function MakeDonutDiagram(vals) {
-     var data = [{
-       values: vals,
-       labels: Array(vals.length),
-       domain: {column: 0},
-       hoverinfo: 'label+percent',
-       hole: .4,
-       type: 'pie'
-     }];
-     var layout = {
-   title: 'Разбиение по кластерам',
-     height: 450,
-     width: 550,
-     showlegend: false,
-     grid: {rows: 1, columns: 1}
-     };
-     Plotly.newPlot('pieChart', data, layout);
-   }

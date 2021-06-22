@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from ont_mapping import ontology
 from DataServiceAdapter import DataServiceAdapter
+from RunnerServiceAdapter import RunnerServiceAdapter
 import os
 from flask_bootstrap import WebCDN, StaticCDN
 
@@ -18,10 +19,7 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'
 data_service_adapter = DataServiceAdapter(os.getenv('DATA_SERVICE', "localhost:8000"))
-try:
-    datasets_ont = ontology.Ontology(file=app.config['DATASETS_ONT'])
-except Exception:
-    datasets_ont = None
+runner_service_adapter = RunnerServiceAdapter(os.getenv('RUNNER_SERVICE', "localhost:8081"))
 
 
 from app import routes, models

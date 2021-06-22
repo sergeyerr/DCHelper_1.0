@@ -72,6 +72,9 @@ function insertChat(who, text, time) {
                 console.log(parsed[elem][2])
                 control += '<a href="'+ 'javascript:void(0)' + '" onclick=' + '"openTreeByID(' + parsed[elem][2] + ')"' + '>' + parsed[elem][1] + '</a>';
             }
+            else if (parsed[elem][0] === 'reload') {
+                resetChat()
+            }
         }
         control +=
             '<p><small>' + date + '</small></p>' +

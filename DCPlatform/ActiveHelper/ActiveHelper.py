@@ -6,6 +6,10 @@ from ActiveHelper.MethodsSuggester import suggest_methods
 from ActiveHelper.OntologyRecomender import find_methods_for_task, find_method_id
 from scipy.spatial import distance
 from openml.tasks import TaskType
+from DataServiceAdapter import DataServiceAdapter
+import os
+
+data_service_adapter = DataServiceAdapter(os.getenv('DATA_SERVICE', "localhost:8000"))
 
 
 class ActiveHelper(object):
@@ -21,6 +25,7 @@ class ActiveHelper(object):
         self.task = None
         self.superv = None
         self.target_col = None
+        self.data_id = None
         self.possible_targets = set(
             pd.read_csv('ActiveHelper/target_list.csv')['target'].str.lower().values.reshape(-1))
         self.task_query = None
@@ -85,7 +90,7 @@ class ActiveHelper(object):
             self.greeting = False
         self.current_state = self.state_task_selection
         res += 'Пожалуйста, опишите задачу, которую хотите решить.'
-        return [['text', res]]
+        return [['reload'], ['text', res]]
 
     def state_task_selection(self, query: str):
         task_type, desc = get_task_type(query)
@@ -214,11 +219,18 @@ class ActiveHelper(object):
     def state_find_algos(self, query: str):
         if self.task is None:
             raise Exception('No task selected')
-        if self.data is None:
+        if self.data is None or self.data_id is None:
             raise Exception('No dataset selected')
         if self.superv and self.target_col == None:
             raise Exception('No target col selected')
-        methods = suggest_methods(self.task, self.data, self.target_col)
+        # лолка, не те данные
+        data_features = data_service_adapter.get_metafeatures_of_datasets([self.data_id]).to_dict('records')[0]
+       # print(data_features)
+        del data_features['openml_id']
+        del data_features['data_table']
+        del data_features['name']
+        del data_features['id']
+        methods = suggest_methods(self.task, self.data, data_features, self.target_col)
         methods = [x[0] for x in methods]
         ont_methods = find_methods_for_task(self.task)
         res = []

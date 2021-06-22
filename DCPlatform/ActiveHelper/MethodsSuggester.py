@@ -5,6 +5,7 @@ from openml.tasks import TaskType
 import pandas as pd
 
 
+
 def get_features(task: TaskType, data: pd.DataFrame, target=None):
     categorical_barrier = 20
     features = {}
@@ -38,11 +39,11 @@ def get_features(task: TaskType, data: pd.DataFrame, target=None):
     features['NumberOfInstancesWithMissingValues'] = data.shape[0] - data.dropna().shape[0]
     features['NumberOfNumericFeatures'] = len(
         data.select_dtypes(include=['float64', 'int64', 'float32', 'int32']).columns)
-    mfe = MFE('all')
-    mfe.fit(data.values)
-    ft = mfe.extract()
-    for k, v in zip(ft[0], ft[1]):
-        features[k] = v
+   # mfe = MFE('all')
+   # mfe.fit(data.values)
+   # ft = mfe.extract()
+   # for k, v in zip(ft[0], ft[1]):
+   #     features[k] = v
     return features
 
 
@@ -51,36 +52,43 @@ class_features = pd.read_csv('ActiveHelper/classification_data.csv')
 reg_features = pd.read_csv('ActiveHelper/regression_data.csv')
 class_scaler = StandardScaler()
 reg_scaler = StandardScaler()
-class_features = class_features[class_features['var.mean'] < class_features['var.mean'].quantile(0.8)]
+class_features = class_features[class_features['var_mean'] < class_features['var_mean'].quantile(0.8)]
 class_features_ = class_scaler.fit_transform(class_features.drop(['did'], axis=1))
+reg_features = reg_features[reg_features['var_mean'] < reg_features['var_mean'].quantile(0.8)]
 reg_features_ = reg_scaler.fit_transform(reg_features.drop(['did'], axis=1))
 class_features[class_features.drop(['did'], axis=1).columns] = class_features_
 reg_features[reg_features.drop(['did'], axis=1).columns] = reg_features_
 
 
-def suggest_methods(task: TaskType, data: pd.DataFrame, target=None) -> list:
+def suggest_methods(task: TaskType, dataset: pd.DataFrame, data_features_calced, target) -> list:
     def place(x):
         x['place'] = range(1, len(x) + 1)
         return x
 
-    target_features = pd.DataFrame([get_features(task, data, target)])
+    target_features = pd.DataFrame([{**get_features(task, dataset, target), **data_features_calced}]).dropna(axis=1)
+    print(target_features)
+
     comparison_metric = {TaskType.SUPERVISED_CLASSIFICATION: 'area_under_roc_curve',
                          TaskType.SUPERVISED_REGRESSION: 'mean_absolute_error'}
 
     if task == TaskType.CLUSTERING:
         raise Exception('alarm')
     if task == TaskType.SUPERVISED_CLASSIFICATION:
-        target_features_ = class_scaler.transform(target_features)
         data_features = class_features
+        data = data_features[target_features.columns]
+        class_scaler.fit(data)
+        target_features_ = class_scaler.transform(target_features)
     elif task == TaskType.SUPERVISED_REGRESSION:
-        target_features_ = reg_scaler.transform(target_features)
         data_features = reg_features
+        data = data_features[target_features.columns]
+        reg_scaler.fit(data)
+        target_features_ = reg_scaler.transform(target_features)
+
     else:
         raise Exception('alarm')
     target_features[:] = target_features_
-    target_features = target_features.dropna(axis=1)
+  #  target_features = target_features.dropna(axis=1)
 
-    data = data_features[target_features.columns]
     data.loc[:, 'did'] = data_features['did']
     neigh = NearestNeighbors(n_neighbors=len(data) // 3)
     data = data.dropna()
