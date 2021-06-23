@@ -89,7 +89,7 @@ class ActiveHelper(object):
             res += 'Доброго времени суток! \n'
             self.greeting = False
         self.current_state = self.state_task_selection
-        res += 'Пожалуйста, опишите задачу, которую хотите решить.'
+        res += 'Пожалуйста, загрузите данные, а после опишите задачу, которую хотите решить.'
         return [['reload'], ['text', res]]
 
     def state_task_selection(self, query: str):

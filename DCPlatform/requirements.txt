@@ -28,6 +28,7 @@ python-Levenshtein
 scipy
 pandas
 langdetect
+psycopg2
 
 
 greenlet==1.1.0

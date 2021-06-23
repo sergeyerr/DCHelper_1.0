@@ -1,11 +1,10 @@
 from app import app, db
-from app.models import User
-from ont_mapping import Ontology, dfs_edges
+from app.models import Users
 
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User}
+    return {'db': db, 'Users': Users}
 
 
 if __name__ == '__main__':

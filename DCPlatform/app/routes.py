@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from ont_mapping import Ontology, dfs_edges
 from app.forms import LoginForm
 from flask_login import current_user, login_user
-from app.models import User
+from app.models import Users
 from flask_login import login_required
 from flask_login import logout_user
 from werkzeug.urls import url_parse
@@ -90,7 +90,8 @@ def load_data():
     active_assistants[current_user.username].data = data_service_adapter.get_dataset_data(data_id)
     active_assistants[current_user.username].data_id = data_id
     current_data_ids[current_user.username] = data_id
-    del current_targets[current_user.username]
+    if current_user.username in current_targets:
+        del current_targets[current_user.username]
     #IA.data = pd.read_csv(files[current_user.username])
 
     return make_response(jsonify({}), 200)
@@ -162,7 +163,7 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = Users.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
             return redirect(url_for('login'))

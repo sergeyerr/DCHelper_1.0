@@ -17,7 +17,10 @@ msg_input.addEventListener("keyup", function (e) {
         if (text !== "") {
             insertChat("user", text);
             $(this).val('');
-            getBotAnswer(text);
+            if (dataLoaded)
+                getBotAnswer(text);
+            else
+                insertChat("bot", '[["text","Пожалуйста, загрузите данные"]]', 0);
         }
     }
 });
