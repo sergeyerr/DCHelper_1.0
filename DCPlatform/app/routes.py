@@ -64,13 +64,17 @@ def make_tree():
         res.append(make_branch(ont, node=root, input_edges_dfs=root.attributes['<descend_in_edges>']))
     return jsonify(res)
 
+
 @app.route('/select_old_data_<dataId>', methods=['POST'])
 @login_required
 def select_old_data(dataId :int):
     active_assistants[current_user.username].data = data_service_adapter.get_dataset_data(dataId)
     active_assistants[current_user.username].data_id = dataId
     current_data_ids[current_user.username] = dataId
-    return make_response(jsonify({}), 200)
+    user_id = data_service_adapter.get_user_id(current_user.username)
+    prev_runs = data_service_adapter.get_user_dataset_runs(user_id, dataId)
+    print(prev_runs)
+    return jsonify(prev_runs)
 
 @app.route('/load_data', methods=['POST'])
 @login_required
@@ -119,22 +123,24 @@ def run_by_ontId(methodId):
         method = name
     if is_regression(ont, node) and is_classification(ont, node):
         if 'class' in method.lower():
-            results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method,
+
+            tmp = runner_service_adapter.run_classification_method(user_id, data_id, method,
                                                                                               lib, target)
         else:
-            results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method,
+            tmp = runner_service_adapter.run_classification_method(user_id, data_id, method,
                                                                                               lib, target)
 
     elif is_regression(ont, node):
-        results[current_user.username] = runner_service_adapter.run_regression_method(user_id, data_id, method, lib, target)
+        tmp = runner_service_adapter.run_regression_method(user_id, data_id, method, lib, target)
     elif is_classification(ont, node):
-        results[current_user.username] = runner_service_adapter.run_classification_method(user_id, data_id, method, lib, target)
+        tmp = runner_service_adapter.run_classification_method(user_id, data_id, method, lib, target)
     elif is_clustering(ont, node):
-        results[current_user.username] = runner_service_adapter.run_clusterting_method(user_id, data_id, method, lib)
+        tmp = runner_service_adapter.run_clusterting_method(user_id, data_id, method, lib)
     else:
         return make_response(jsonify({'exception': 'such task is not supported'}), 404)
         #raise Exception('such task is not supported')
-    return make_response(jsonify({'pie_chart': False}), 200)
+    results[current_user.username] = tmp[0]
+    return make_response(jsonify({'runs_data': tmp[1]}), 200)
 
 
 @app.route('/get_res', methods=['GET', 'POST'])
@@ -180,6 +186,14 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+#
+# @app.route('/get_user_dataset_runs', methods=['GET'])
+# @login_required
+# def get_user_dataset_runs():
+#     user_id = data_service_adapter.get_user_id(current_user.username)
+#     return make_response(data_service_adapter.get_user_dataset_runs(user_id, current_data_ids[current_user.username]), 200)
+
+
 @app.route('/api/bot', methods=['POST'])
 @login_required
 def bot_answer():
@@ -187,4 +201,6 @@ def bot_answer():
         active_assistants[current_user.username] = Helper()
     list_of_p = active_assistants[current_user.username].process_query(request.data.decode('utf-8'))
     return json.dumps(list_of_p)
+
+
 

@@ -138,3 +138,14 @@ class DataServiceAdapter:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
         return r.json()['user_id']
+        
+    
+    def get_user_dataset_runs(self, user_id: int, data_id: int):
+        params = [('user_id', user_id), ('data_id', data_id)]
+        try:
+            r = httpx.get(f"http://{self.address}/get_user_dataset_runs",params = params)
+            r.raise_for_status()
+        except httpx.HTTPError as exc:
+            print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
+            return None
+        return r.json()

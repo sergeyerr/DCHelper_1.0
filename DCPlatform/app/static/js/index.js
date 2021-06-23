@@ -71,7 +71,6 @@
              }
          };
         });
-
    });
    $("#context-menu").on("click", function() {
    $(this).hide();
@@ -109,6 +108,7 @@
      }).then(response => {
          $("#data_filename").text('Имя файла c данными: ' + file.name);
          dataLoaded = true;
+         //runs_data
          if (algoChosen) {
              $("#bigRedButton").css('visibility', 'visible');
          }
@@ -126,7 +126,15 @@
          if (algoChosen) {
              $("#bigRedButton").css('visibility', 'visible');
          }
-     })
+         return response.json()
+     }).then(data => {
+          clear_runs_table();
+          console.log('run table cleared');
+          for (let i = 0; i < data['runs_data'].length; i++) {
+              let element =  data['runs_data'][i];
+              insert_run(element[0], element[1], element[2], element[3]);
+          }
+        })
    }
 
    function downloadRes() {

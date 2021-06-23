@@ -42,6 +42,32 @@
     </div>
 </form>
 {% endif %}
+<div id="run_history">
+    <div class="panel panel-default">
+        <div class="panel-heading" id="accordion">
+            История экспериментов над данным датасетом
+            <div class="btn-group pull-right">
+                <a type="button" class="btn btn-default btn-xs" id="collapse_history_button">
+                    <span id="collapse_history_span" class="glyphicon glyphicon-th-list"></span>
+                </a>
+            </div>
+        </div>
+        <div  class="panel-collapse collapse" id="collapse_history">
+            <table class="table" id="history_table">
+              <thead>
+                <tr>
+                  <th scope="col">Тип задачи</th>
+                  <th scope="col">Метод</th>
+                  <th scope="col">Целевая переменная</th>
+                   <th scope="col">Значение метрики качества </th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 <br>
 <div>
    <button type="button" class="btn btn-danger"  id = "bigRedButton" style="visibility: hidden; display: inline-block" onclick="javascript:RunMethod()">Запустить алгоритм</button>
@@ -59,6 +85,7 @@
       <h5 id = "chosenNodeString"></h5>
    </span>
 </div>
+
 <div>
    <button type="button" class="btn btn-primary btn-lg tree_opt" style="visibility: hidden; display: inline-block" onclick="javascript:ExpandTree()">Раскрыть</button>
    <button type="button" class="btn btn-secondary btn-lg tree_opt" style="visibility: hidden; display: inline-block" onclick="javascript:CollapseTree()">Свернуть</button>
@@ -91,10 +118,12 @@
         </div>
     </div>
 </div>
+
 {% block scripts %}
 {{super()}}
 <script src="{{ url_for('static', filename='bootstrap-treeview/js/bootstrap-treeview35.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('static', filename='js/index.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='js/history_table.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bot.js') }}"></script>
  <link href="{{ url_for('static', filename='css/bot_page.css') }}" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
@@ -109,6 +138,8 @@
                $('#downloadResButton').css('visibility', 'visible');
                $("#bigRedButton").text("Запустить метод");
                $("h1").text("Метод завершил работу");
+               let data = response['runs_data'][0];
+               insert_run(data[0], data[1], data[2], data[3])
            }).fail(function () {
            $('#downloadResButton').text('Загрузить предыдущие результаты');
            $("h1").text("Произошла ошибка при запуске метода");

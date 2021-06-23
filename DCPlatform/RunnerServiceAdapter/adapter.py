@@ -19,7 +19,7 @@ class RunnerServiceAdapter:
         except httpx.HTTPError as exc:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
-        return r.json()['run_id']
+        return r.json()['run_id'], r.json()['runs_data']
     
     def run_regression_method(self, user_id: int, data_id: int, method: str, lib: str, target: str):
         params = [('user_id', user_id),
@@ -33,7 +33,7 @@ class RunnerServiceAdapter:
         except httpx.HTTPError as exc:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
-        return r.json()['run_id']
+        return r.json()['run_id'], r.json['runs_data']
         
     def run_clusterting_method(self, user_id: int, data_id: int, method: str, lib: str):
         params = [('user_id', user_id),
@@ -46,4 +46,4 @@ class RunnerServiceAdapter:
         except httpx.HTTPError as exc:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None
-        return r.json()['run_id']
+        return r.json()['run_id'], r.json['runs_data']
