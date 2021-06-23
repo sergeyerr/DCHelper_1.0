@@ -104,7 +104,7 @@ function resetChat() {
 
 function getBotAnswer(msg) {
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/bot', true);
+    xhr.open('POST', '/chatbot', true);
     xhr.send(msg);
 
     xhr.onload = function () {

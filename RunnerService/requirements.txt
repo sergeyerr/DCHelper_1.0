@@ -1,0 +1,11 @@
+pandas
+pymfe
+fastapi
+sqlalchemy
+psycopg2
+python-multipart
+uvicorn[standard]
+scikit-learn
+catboost
+httpx
+fylearn

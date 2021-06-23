@@ -1,0 +1,39 @@
+# Use postgres/example user/password credentials
+version: '3'
+services:
+  pg:
+    image: postgres
+    restart: unless-stopped
+    
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+     - data-volume:/var/lib/postgresql/data
+     
+  data_service:
+    image: sergeyer/dcplatform_data_service
+    restart: unless-stopped
+    depends_on:
+      - pg
+    environment:
+      - PG_HOST=pg
+  runner_service:
+    image: sergeyer/dcplatform_runner_service
+    restart: unless-stopped
+    depends_on:
+      - data_service
+    environment:
+      - DATA_SERVICE=data_service:8000
+      
+  intellegent_assistant:
+    image: sergeyer/dcplatform_ia
+    ports:
+      - "5000:5000"
+    depends_on:
+      - runner_service
+    environment:
+      - DATA_SERVICE=data_service:8000
+      - RUNNER_SERVICE=runner_service:8000
+      - PG_HOST=pg
+volumes:
+  data-volume:

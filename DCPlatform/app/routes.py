@@ -194,7 +194,7 @@ def logout():
 #     return make_response(data_service_adapter.get_user_dataset_runs(user_id, current_data_ids[current_user.username]), 200)
 
 
-@app.route('/api/bot', methods=['POST'])
+@app.route('/chatbot', methods=['POST'])
 @login_required
 def bot_answer():
     if current_user.username not in active_assistants:
