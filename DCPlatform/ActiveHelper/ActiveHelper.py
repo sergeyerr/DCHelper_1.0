@@ -21,7 +21,7 @@ class ActiveHelper(object):
         self.current_state = self.state_0
         self.greeting = True
         # self.stack = []
-        # self.data = None
+        self.data = None
         self.task = None
         self.superv = None
         self.target_col = None
@@ -81,6 +81,7 @@ class ActiveHelper(object):
 
         return tmp_confirmation
 
+
     def state_0(self, query, reset=False):
         res = ''
         if reset:
@@ -89,7 +90,7 @@ class ActiveHelper(object):
             res += 'Доброго времени суток! \n'
             self.greeting = False
         self.current_state = self.state_task_selection
-        res += 'Пожалуйста, загрузите данные, а после опишите задачу, которую хотите решить.'
+        res += 'Пожалуйста, опишите задачу, которую хотите решить.'
         return [['reload'], ['text', res]]
 
     def state_task_selection(self, query: str):
@@ -142,7 +143,7 @@ class ActiveHelper(object):
         if self.data is not None:
             return self.state_check_data_download(None)
         self.current_state = self.state_check_data_download
-        return [['text', 'Загрузите, пожалуйста, данные. Это можно сделать с помощью кнопки upload data.']]
+        return [['want_data', 'Загрузите, пожалуйста, данные. Это можно сделать с помощью кнопки "Загрузить данные".']]
 
     def state_check_data_download(self, query: str):
         if self.data is None:

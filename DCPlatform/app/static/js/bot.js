@@ -17,10 +17,10 @@ msg_input.addEventListener("keyup", function (e) {
         if (text !== "") {
             insertChat("user", text);
             $(this).val('');
-            if (dataLoaded)
-                getBotAnswer(text);
-            else
-                insertChat("bot", '[["text","Пожалуйста, загрузите данные"]]', 0);
+            //if (dataLoaded)
+            getBotAnswer(text);
+           // else
+                //insertChat("bot", '[["text","Пожалуйста, загрузите данные"]]', 0);
         }
     }
 });
@@ -74,6 +74,10 @@ function insertChat(who, text, time) {
             else if (parsed[elem][0] === 'method_link') {
                 console.log(parsed[elem][2])
                 control += '<a href="'+ 'javascript:void(0)' + '" onclick=' + '"openTreeByID(' + parsed[elem][2] + ')"' + '>' + parsed[elem][1] + '</a>';
+            }
+            else if (parsed[elem][0] === 'want_data') {
+                want_data = true;
+                control += '<p>' + parsed[elem][1] + '</p>';
             }
             else if (parsed[elem][0] === 'reload') {
                 resetChat()

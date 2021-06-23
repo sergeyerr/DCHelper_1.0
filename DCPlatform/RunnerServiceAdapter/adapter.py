@@ -42,7 +42,7 @@ class RunnerServiceAdapter:
               ('lib', lib)
               ]
         try:
-            r = httpx.post(f"http://{self.address}/run_clusterting_method",params = params)
+            r = httpx.post(f"http://{self.address}/run_clusterting_method",params = params, timeout=60)
         except httpx.HTTPError as exc:
             print(f"An error {exc.response.status_code} occurred while requesting {exc.request.url!r}.")
             return None

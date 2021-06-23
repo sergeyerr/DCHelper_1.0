@@ -1,4 +1,6 @@
-   $(document).ready(function() {
+ var want_data = false;
+$(document).ready(function() {
+
          $('#search_bar').select2({
                ajax: {
                  url: '/nlp_query',
@@ -109,6 +111,12 @@
          $("#data_filename").text('Имя файла c данными: ' + file.name);
          dataLoaded = true;
          //runs_data
+         if (want_data) {
+             insertChat("user", file.name);
+             $(this).val('');
+             getBotAnswer('');
+             want_data = false;
+         }
          if (algoChosen) {
              $("#bigRedButton").css('visibility', 'visible');
          }
@@ -126,6 +134,12 @@
          if (algoChosen) {
              $("#bigRedButton").css('visibility', 'visible');
          }
+          if (want_data) {
+              insertChat("user", e.options[e.selectedIndex].text);
+              $(this).val('');
+              getBotAnswer('');
+              want_data = false;
+          }
          return response.json()
      }).then(data => {
           clear_runs_table();
