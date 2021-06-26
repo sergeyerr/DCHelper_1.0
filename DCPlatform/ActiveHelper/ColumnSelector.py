@@ -1,10 +1,16 @@
+from typing import List
 from Levenshtein import distance as leven_dist
 
 
-def get_columns_in_query(query: str, columns: list, threshold=3, norm=False) -> list:
+def get_columns_in_query(query: str, columns: List[str], threshold: int = 3, norm: bool = False) -> List[str]:
     """
-    возвращает найденные названия в запросе с расстоянием Левенштейна, меньшим threshold.
+    Возвращает найденные названия в запросе с расстоянием Левенштейна, меньшим threshold.
     Отсортированы по возрастанию threshold
+
+    query: str: Пользовательский запрос
+    columns: List[str]: список названий колонок из датасета
+    threshold: int: максимальная возможное расстояние Левенштена от названия колонок до подстрок запроса
+    norm : bool: нужна ли нормировка расстояния на длину слова
     """
     min_dist = 10000000
     res = dict()

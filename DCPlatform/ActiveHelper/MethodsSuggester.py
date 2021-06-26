@@ -5,48 +5,57 @@ from openml.tasks import TaskType
 import pandas as pd
 
 
+def get_features(task: TaskType, cached_metafeatures: pd.DataFrame, target: str = None):
+    """
+    Возвращает метапризнаки данного датасета
 
-def get_features(task: TaskType, data: pd.DataFrame, target=None):
+    task: TaskType: Тип решаемой задачи машинного обучения
+    cached_metafeatures: pd.DataFrame: заранее предпосчитанные признаки датасета
+    target: str: при наличии, целевая колонка в датасете для решаемой задачи
+    """
     categorical_barrier = 20
     features = {}
     is_superv = task == TaskType.SUPERVISED_CLASSIFICATION or TaskType.SUPERVISED_REGRESSION
     if is_superv and not target:
         raise Exception("not target for supervised task")
     if task == TaskType.SUPERVISED_CLASSIFICATION:
-        if len(pd.unique(data[target])) > categorical_barrier:
+        if len(pd.unique(cached_metafeatures[target])) > categorical_barrier:
             raise Exception('too many values for classification')
-        features['MajorityClassSize'] = data.groupby(target).count().max()[0]
-        features['MinorityClassSize'] = data.groupby(target).count().min()[0]
-        features['NumberOfClasses'] = len(data[target].unique())
+        features['MajorityClassSize'] = cached_metafeatures.groupby(target).count().max()[0]
+        features['MinorityClassSize'] = cached_metafeatures.groupby(target).count().min()[0]
+        features['NumberOfClasses'] = len(cached_metafeatures[target].unique())
     if task == TaskType.SUPERVISED_REGRESSION:
-        if data[target].dtype != 'float64' and \
-                data[target].dtype != 'int64' and \
-                data[target].dtype != 'float32' and data[target].dtype != 'int32':
+        if cached_metafeatures[target].dtype != 'float64' and \
+                cached_metafeatures[target].dtype != 'int64' and \
+                cached_metafeatures[target].dtype != 'float32' and cached_metafeatures[target].dtype != 'int32':
             raise Exception('target is not numeric attribute')
-        features['target_max'] = data[target].max()
-        features['target_min'] = data[target].min()
-        features['targets_q_0.25'] = data[target].quantile(0.25)
-        features['targets_q_0.5'] = data[target].quantile(0.5)
-        features['targets_q_0.75'] = data[target].quantile(0.75)
-        features['targets_skewness'] = data[target].skew()
-        features['targets_kurtosis'] = data[target].kurt()
+        features['target_max'] = cached_metafeatures[target].max()
+        features['target_min'] = cached_metafeatures[target].min()
+        features['targets_q_0.25'] = cached_metafeatures[target].quantile(0.25)
+        features['targets_q_0.5'] = cached_metafeatures[target].quantile(0.5)
+        features['targets_q_0.75'] = cached_metafeatures[target].quantile(0.75)
+        features['targets_skewness'] = cached_metafeatures[target].skew()
+        features['targets_kurtosis'] = cached_metafeatures[target].kurt()
     if is_superv:
-        data = data.copy().drop([target], axis=1)
-    features['NumberOfBinaryFeatures'] = len([col for col in data if
-                                              data[col].dropna().value_counts().index.isin([0, 1]).all()])
-    features['NumberOfFeatures'] = len(data.columns) - 1 if is_superv else 0
-    features['NumberOfInstances'] = len(data)
-    features['NumberOfInstancesWithMissingValues'] = data.shape[0] - data.dropna().shape[0]
+        cached_metafeatures = cached_metafeatures.copy().drop([target], axis=1)
+    features['NumberOfBinaryFeatures'] = len([col for col in cached_metafeatures if
+                                              cached_metafeatures[col].dropna().value_counts().index.isin([0, 1]).all()])
+    features['NumberOfFeatures'] = len(cached_metafeatures.columns) - 1 if is_superv else 0
+    features['NumberOfInstances'] = len(cached_metafeatures)
+    features['NumberOfInstancesWithMissingValues'] = cached_metafeatures.shape[0] - cached_metafeatures.dropna().shape[0]
     features['NumberOfNumericFeatures'] = len(
-        data.select_dtypes(include=['float64', 'int64', 'float32', 'int32']).columns)
-   # mfe = MFE('all')
-   # mfe.fit(data.values)
-   # ft = mfe.extract()
-   # for k, v in zip(ft[0], ft[1]):
-   #     features[k] = v
+        cached_metafeatures.select_dtypes(include=['float64', 'int64', 'float32', 'int32']).columns)
+    # MFE фичи подсчитываются в дата-сервисе
+    # mfe = MFE('all')
+    # mfe.fit(data.values)
+    # ft = mfe.extract()
+    # for k, v in zip(ft[0], ft[1]):
+    #     features[k] = v
     return features
 
 
+
+# запуски с OpenML
 runs = pd.read_csv('ActiveHelper/all_you_need_runs.csv')
 class_features = pd.read_csv('ActiveHelper/classification_data.csv')
 reg_features = pd.read_csv('ActiveHelper/regression_data.csv')
@@ -60,12 +69,20 @@ class_features[class_features.drop(['did'], axis=1).columns] = class_features_
 reg_features[reg_features.drop(['did'], axis=1).columns] = reg_features_
 
 
-def suggest_methods(task: TaskType, dataset: pd.DataFrame, data_features_calced, target) -> list:
+def suggest_methods(task: TaskType, dataset: pd.DataFrame, data_metafeatures : dict, target : str = None) -> list:
+    """
+    Предлагает методы решения задачи МО для данного датасета
+
+    task: TaskType: задача машинного обучения
+    dataset: pd.DataFrame: датасет
+    data_metafeatures: dict: предподсчитанные метапризнаки датасета
+    target: str: целевая колонка
+    """
     def place(x):
         x['place'] = range(1, len(x) + 1)
         return x
 
-    target_features = pd.DataFrame([{**get_features(task, dataset, target), **data_features_calced}]).dropna(axis=1)
+    target_features = pd.DataFrame([{**get_features(task, dataset, target), **data_metafeatures}]).dropna(axis=1)
     print(target_features)
 
     comparison_metric = {TaskType.SUPERVISED_CLASSIFICATION: 'area_under_roc_curve',
@@ -87,7 +104,7 @@ def suggest_methods(task: TaskType, dataset: pd.DataFrame, data_features_calced,
     else:
         raise Exception('alarm')
     target_features[:] = target_features_
-  #  target_features = target_features.dropna(axis=1)
+    #  target_features = target_features.dropna(axis=1)
 
     data.loc[:, 'did'] = data_features['did']
     neigh = NearestNeighbors(n_neighbors=len(data) // 3)

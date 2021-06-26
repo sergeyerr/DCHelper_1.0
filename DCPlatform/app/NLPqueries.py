@@ -1,14 +1,19 @@
+from typing import List
+
 from nltk.stem.snowball import SnowballStemmer
 from langdetect import detect
 from Levenshtein import distance
 from collections import deque
-
-import re
 from nltk.corpus import stopwords
-
+from ont_mapping import Ontology
+import re
 
 class QueryProcessor:
-    def __init__(self, ont):
+    def __init__(self, ont: Ontology):
+        '''
+        Конструктор обработчика запросов,
+        ont: Ontology: онтология метод и средств для задачи МО
+        '''
         self.stemmers = {'en': SnowballStemmer('english'), 'ru': SnowballStemmer('russian')}
         self.stop_words_ = {'en': set(stopwords.words('english')), 'ru': set(stopwords.words('russian'))}
         self.regex = re.compile('[,\.!?-_ ]')
@@ -28,7 +33,12 @@ class QueryProcessor:
                 syn_name = self.regex.sub('', syn_name)
                 self.synonym_nodes[name] = syn_name
 
-    def process_query(self, query):
+    def process_query(self, query: str) -> List:
+        """
+        Обратка запроса.
+        Принимает строку запроса, возвращает список с  id и названиями найденных вершин
+        query: str: строка запроса
+        """
         query = query.lower()
         lang = detect(query)
         if lang not in ['en', 'ru']:
